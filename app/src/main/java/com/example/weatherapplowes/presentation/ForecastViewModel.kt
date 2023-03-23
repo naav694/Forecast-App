@@ -30,6 +30,12 @@ class ForecastViewModel @Inject constructor(
     private val _navigationSearchScreenEvent = MutableSharedFlow<NavigationSearchScreenEvent>()
     val navigationSearchScreenEvent = _navigationSearchScreenEvent.asSharedFlow()
 
+    fun resetErrorMessage() {
+        _uiSearchState.update {
+            it.copy(error = "")
+        }
+    }
+
     fun getWeatherInfoDetail(dt: Long) {
         viewModelScope.launch {
             val weatherInfo = _uiForecastState.value.weatherInfoList.firstOrNull {

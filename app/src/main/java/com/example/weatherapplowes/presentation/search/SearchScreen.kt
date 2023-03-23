@@ -84,6 +84,7 @@ fun SearchScreen(
                     scaffoldState.snackbarHostState.showSnackbar(
                         message = state.error
                     )
+                    viewModel.resetErrorMessage()
                 }
             }
         }
