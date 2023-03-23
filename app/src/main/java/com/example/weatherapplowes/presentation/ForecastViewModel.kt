@@ -15,11 +15,11 @@ import javax.inject.Inject
 class ForecastViewModel @Inject constructor(
     private val getForecastUseCase: GetForecastUseCase
 ) : ViewModel() {
-    private val _searchState = MutableStateFlow(SearchState())
-    val searchState: StateFlow<SearchState> = _searchState
+    private val _uiSearchState = MutableStateFlow(SearchState())
+    val uiSearchState: StateFlow<SearchState> = _uiSearchState
 
-    private val _listState = MutableStateFlow(WeatherInfoListState())
-    val listState: StateFlow<WeatherInfoListState> = _listState
+    private val _uiForecastState = MutableStateFlow(UiForecastState())
+    val uiForecastState: StateFlow<UiForecastState> = _uiForecastState
 
     private val _detailState = MutableStateFlow(WeatherDetail())
     val detailState: StateFlow<WeatherDetail> = _detailState
@@ -32,7 +32,7 @@ class ForecastViewModel @Inject constructor(
 
     fun getWeatherInfoDetail(dt: Long) {
         viewModelScope.launch {
-            val weatherInfo = _listState.value.weatherInfoList.firstOrNull {
+            val weatherInfo = _uiForecastState.value.weatherInfoList.firstOrNull {
                 it.dt == dt
             }
             weatherInfo?.let { _detailState.value = it.weatherDetail }
@@ -41,7 +41,7 @@ class ForecastViewModel @Inject constructor(
     }
 
     fun getWeatherInfoList(city: String) {
-        _searchState.update {
+        _uiSearchState.update {
             it.copy(isLoading = true)
         }
         viewModelScope.launch {
@@ -49,22 +49,22 @@ class ForecastViewModel @Inject constructor(
                 city,
                 Constants.UNITS
             ).let { result ->
-                _searchState.update {
+                _uiSearchState.update {
                     it.copy(isLoading = false)
                 }
                 when (result) {
                     is Result.Error -> {
-                        _searchState.update {
+                        _uiSearchState.update {
                             it.copy(error = result.exception.message ?: "Unknown Error")
                         }
                     }
                     is Result.Message -> {
-                        _searchState.update {
+                        _uiSearchState.update {
                             it.copy(error = result.message)
                         }
                     }
                     is Result.Success -> {
-                        _listState.update {
+                        _uiForecastState.update {
                             it.copy(
                                 weatherInfoList = result.data.weatherInfoList,
                                 city = city

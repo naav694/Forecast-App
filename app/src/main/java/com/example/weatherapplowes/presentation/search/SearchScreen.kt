@@ -23,7 +23,7 @@ fun SearchScreen(
     viewModel: ForecastViewModel = viewModel()
 ) {
     var city by remember { mutableStateOf("") }
-    val state = viewModel.searchState.collectAsState().value
+    val state = viewModel.uiSearchState.collectAsState().value
 
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()

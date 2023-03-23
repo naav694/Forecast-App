@@ -9,6 +9,7 @@ import com.example.weatherapplowes.domain.repository.ForecastRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.core.Is.`is`
 import org.hamcrest.core.IsEqual
 import org.hamcrest.core.IsInstanceOf
 import org.junit.Before
@@ -77,8 +78,8 @@ class GetForecastUseCaseTest {
                 .thenReturn(Result.Success(forecastResponse))
 
         val response = getForecastUseCase("Atlanta", Constants.UNITS)
+        assertThat(response, `is`(Result.Success(forecastResponse)))
         response as Result.Success
-
         assertThat(response.data, IsEqual(forecastResponse))
     }
 
@@ -89,7 +90,6 @@ class GetForecastUseCaseTest {
 
         val response = getForecastUseCase("Atlanta", Constants.UNITS)
         response as Result.Error
-
         assertThat(response, IsInstanceOf.instanceOf(Result.Error::class.java))
     }
 

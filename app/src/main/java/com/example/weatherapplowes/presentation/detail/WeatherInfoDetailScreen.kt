@@ -21,7 +21,7 @@ fun WeatherInfoDetailScreen(
     viewModel: ForecastViewModel = viewModel()
 ) {
     val weatherDetail = viewModel.detailState.collectAsState().value
-    val city = viewModel.listState.collectAsState().value.city
+    val city = viewModel.uiForecastState.collectAsState().value.city
 
     Scaffold(
         topBar = {

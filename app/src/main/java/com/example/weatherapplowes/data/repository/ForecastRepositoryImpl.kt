@@ -5,6 +5,7 @@ import com.example.weatherapplowes.data.remote.ForecastApi
 import com.example.weatherapplowes.domain.model.Forecast
 import com.example.weatherapplowes.domain.model.toForecast
 import com.example.weatherapplowes.domain.repository.ForecastRepository
+import okio.IOException
 import javax.inject.Inject
 
 class ForecastRepositoryImpl @Inject constructor(
@@ -14,19 +15,24 @@ class ForecastRepositoryImpl @Inject constructor(
         city: String,
         units: String
     ): Result<Forecast> {
-        val response = api.getForecast(city, units)
-        return if (response.isSuccessful) {
-            response.body()?.let {
-                when (it.cod) {
-                    "200" -> Result.Success(it.toForecast())
-                    else -> Result.Error(Exception())
+        return try {
+            val response = api.getForecast(city, units)
+            return if (response.isSuccessful) {
+                response.body()?.let {
+                    when (it.cod) {
+                        "200" -> Result.Success(it.toForecast())
+                        else -> Result.Error(Exception())
+                    }
+                } ?: Result.Message("Unknown Error")
+            } else {
+                if (response.code() == 404) {
+                    return Result.Message("City Not Found")
                 }
-            } ?: Result.Message("Unknown Error")
-        } else {
-            if (response.code() == 404) {
-                return Result.Message("City Not Found")
+                Result.Error(Exception())
             }
-            Result.Error(Exception())
+        } catch (exceptionIO: IOException) {
+            Result.Error(exceptionIO)
         }
+
     }
 }

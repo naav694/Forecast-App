@@ -8,11 +8,13 @@ import com.example.weatherapplowes.domain.model.WeatherDetail
 import com.example.weatherapplowes.domain.model.WeatherInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import okio.IOException
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.IsEqual
 import org.hamcrest.core.IsInstanceOf.instanceOf
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.given
 import org.mockito.Mockito.*
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Response
@@ -106,20 +108,34 @@ class ForecastRepositoryImplTest {
 
     @Test
     fun `Get Forecast Response Error`() = runTest {
-        val apiReponse = ForecastDto(
+        val apiResponse = ForecastDto(
             cod = "404",
             message = "City not found",
-            city = CityDto("",""),
+            city = CityDto("", ""),
             emptyList()
         )
         val fakeForecastApi = mock(ForecastApi::class.java)
         `when`(fakeForecastApi.getForecast("Atlanta", Constants.UNITS))
-            .thenReturn(Response.success(apiReponse))
+            .thenReturn(Response.success(apiResponse))
 
         val forecastRepository = ForecastRepositoryImpl(fakeForecastApi)
 
         val response = forecastRepository.getForecastByCity("Atlanta", Constants.UNITS)
         response as Result.Error
+
+        assertThat(response, instanceOf(Result.Error::class.java))
+    }
+
+    @Test
+    fun `Get Forecast Response Exception`() = runTest {
+        val fakeForecastApi = mock(ForecastApi::class.java)
+        given(fakeForecastApi.getForecast("Atlanta", Constants.UNITS))
+            .willAnswer {
+                throw IOException()
+            }
+
+        val forecastRepository = ForecastRepositoryImpl(fakeForecastApi)
+        val response = forecastRepository.getForecastByCity("Atlanta", Constants.UNITS)
 
         assertThat(response, instanceOf(Result.Error::class.java))
     }

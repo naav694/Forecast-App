@@ -27,7 +27,7 @@ fun WeatherListScreen(
     navController: NavController,
     viewModel: ForecastViewModel = viewModel()
 ) {
-    val listState = viewModel.listState.collectAsState().value
+    val listState = viewModel.uiForecastState.collectAsState().value
 
     LaunchedEffect(Unit) {
         viewModel.navigationListScreenEvent.collect { event ->

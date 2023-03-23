@@ -1,17 +1,18 @@
 package com.example.weatherapplowes.presentation
 
+import com.example.weatherapplowes.MainCoroutineRule
 import com.example.weatherapplowes.common.*
 import com.example.weatherapplowes.domain.model.*
-import com.example.weatherapplowes.domain.repository.ForecastRepository
 import com.example.weatherapplowes.domain.usecase.getforecast.GetForecastUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.core.IsEqual
-import org.hamcrest.core.IsInstanceOf
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -59,39 +60,60 @@ class ForecastViewModelTest {
     )
 
     private lateinit var forecastViewModel: ForecastViewModel
-    private lateinit var mockForecastRepository: ForecastRepository
+
+    @Mock
+    lateinit var getForecastUseCase: GetForecastUseCase
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Before
     fun setup() {
-        mockForecastRepository = mock(ForecastRepository::class.java)
-        forecastViewModel = ForecastViewModel(GetForecastUseCase(mockForecastRepository))
+        forecastViewModel = ForecastViewModel(getForecastUseCase)
     }
 
     @Test
-    fun `Get the Forest Is Success`() {
-        runTest {
-            val useCase = GetForecastUseCase(mockForecastRepository)
-            `when`(useCase.invoke("Atlanta", Constants.UNITS))
-                .thenReturn(Result.Success(forecastResponse))
+    fun `Get the Forecast Is Success`() = runTest {
+        `when`(getForecastUseCase.invoke("Atlanta", Constants.UNITS))
+            .thenReturn(Result.Success(forecastResponse))
 
-            val response = useCase.invoke("Atlanta", Constants.UNITS)
-            response as Result.Success
+        forecastViewModel.getWeatherInfoList("Atlanta")
 
-            assertThat(response.data, IsEqual(forecastResponse))
+        forecastViewModel.uiSearchState.value.run {
+            assertThat(isLoading, equalTo(false))
+        }
+
+        forecastViewModel.uiForecastState.value.run {
+            assertThat(weatherInfoList, equalTo(forecastResponse.weatherInfoList))
+            assertThat(city, equalTo(forecastResponse.city))
         }
     }
 
     @Test
-    fun `Get the Forest Is Error`() {
-        runTest {
-            val useCase = GetForecastUseCase(mockForecastRepository)
-            `when`(useCase.invoke("Atlanta", Constants.UNITS))
-                .thenReturn(Result.Error(Exception()))
+    fun `Get the Forest Is Error`() = runTest {
+        `when`(getForecastUseCase.invoke("Atlanta", Constants.UNITS))
+            .thenReturn(Result.Error(Exception()))
 
-            val response = useCase.invoke("Atlanta", Constants.UNITS)
-            response as Result.Error
+        forecastViewModel.getWeatherInfoList("Atlanta")
 
-            assertThat(response, IsInstanceOf.instanceOf(Result.Error::class.java))
+        forecastViewModel.uiSearchState.value.run {
+            assertThat(error, equalTo("Unknown Error"))
+        }
+
+    }
+
+    @Test
+    fun `Get WeatherDetail`() = runTest {
+        `when`(getForecastUseCase.invoke("Atlanta", Constants.UNITS))
+            .thenReturn(Result.Success(forecastResponse))
+
+        forecastViewModel.getWeatherInfoList("Atlanta")
+
+        forecastViewModel.uiForecastState.value.run {
+            val weatherDetail = weatherInfoList.first().weatherDetail
+            forecastViewModel.detailState.value.run {
+                assertThat(weatherDetail, equalTo(forecastResponse.weatherInfoList.first().weatherDetail))
+            }
         }
     }
 
