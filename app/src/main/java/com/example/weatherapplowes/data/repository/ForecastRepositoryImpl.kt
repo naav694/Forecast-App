@@ -31,7 +31,9 @@ class ForecastRepositoryImpl @Inject constructor(
                 Result.Error(Exception())
             }
         } catch (exceptionIO: IOException) {
-            Result.Error(exceptionIO)
+            Result.Message("No Internet Connection")
+        } catch (exception: Exception) {
+            Result.Error(Exception())
         }
 
     }
